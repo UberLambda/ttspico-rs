@@ -3,7 +3,15 @@ name = "pico-sys"
 version = "0.1.0"
 authors = ["Paolo Jovon <paolo.jovon@gmail.com>"]
 edition = "2018"
+readme = "../README.md"
+build = "build/build.rs"
+links = "svoxpico"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+libc = "^0.2"
+
+[build-dependencies]
+glob = "^0.3"
+cc = { version = "^1.0", features = ["parallel"] }
