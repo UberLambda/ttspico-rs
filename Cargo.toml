@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "pico-sys",
-    "pico",
+    "ttspico-sys",
+    "ttspico",
 ]

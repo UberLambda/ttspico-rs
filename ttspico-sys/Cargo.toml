@@ -1,5 +1,5 @@
 [package]
-name = "pico-sys"
+name = "ttspico-sys"
 version = "0.1.0"
 authors = ["Paolo Jovon <paolo.jovon@gmail.com>"]
 edition = "2018"
