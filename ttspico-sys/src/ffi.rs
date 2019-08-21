@@ -4,22 +4,6 @@ bindgen --whitelist-type 'pico.*' --whitelist-var '(pico|PICO).*' --whitelist-fu
 */
 #![allow(non_camel_case_types)]
 
-pub const PICO_MAX_VOICE_NAME_SIZE: u32 = 32;
-pub const PICO_MAX_RESOURCE_NAME_SIZE: u32 = 32;
-pub const PICO_MAX_DATAPATH_NAME_SIZE: u32 = 128;
-pub const PICO_MAX_FILE_NAME_SIZE: u32 = 64;
-pub const PICO_MAX_NUM_RESOURCES: u32 = 64;
-pub const PICO_MAX_NUM_VOICE_DEFINITIONS: u32 = 64;
-pub const PICO_MAX_NUM_RSRC_PER_VOICE: u32 = 16;
-pub const PICO_MAX_FOREIGN_HEADER_LEN: u32 = 64;
-pub const PICO_RESET_FULL: u32 = 0;
-pub const PICO_RESET_SOFT: u32 = 16;
-pub const PICO_INT16_MAX: u32 = 32767;
-pub const PICO_UINT16_MAX: u32 = 65535;
-pub const PICO_INT32_MAX: u32 = 2147483647;
-pub const PICO_UINT32_MAX: u32 = 4294967295;
-pub const PICO_RETSTRINGSIZE: u32 = 200;
-pub type pico_Status = ::std::os::raw::c_int;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct pico_system {
@@ -44,6 +28,7 @@ pub type pico_Int32 = ::std::os::raw::c_int;
 pub type pico_Uint32 = ::std::os::raw::c_uint;
 pub type pico_Char = ::std::os::raw::c_uchar;
 pub type pico_Retstring = [::std::os::raw::c_char; 200usize];
+pub type pico_Status = ::std::os::raw::c_int;
 extern "C" {
     #[doc = "Initializes the Pico system and returns its handle in \'outSystem\'."]
     #[doc = "\'memory\' and \'size\' define the location and maximum size of memory"]
