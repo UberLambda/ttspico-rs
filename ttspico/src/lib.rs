@@ -8,8 +8,8 @@ use ttspico_sys as native;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct PicoError {
-    code: native::pico_Status,
-    descr: String,
+    pub code: native::pico_Status,
+    pub descr: String,
 }
 
 impl fmt::Display for PicoError {
@@ -46,19 +46,16 @@ impl System {
     pub fn new(memsz: usize) -> Result<System, PicoError> {
         unsafe {
             let mem_layout = std::alloc::Layout::from_size_align(memsz, 16).unwrap();
-
             let mut ret = System {
                 sys: std::ptr::null_mut(),
                 mem: std::alloc::alloc(mem_layout),
                 mem_layout,
             };
-
             let init_code = native::pico_initialize(
                 ret.mem as *mut std::os::raw::c_void,
                 ret.mem_layout.size() as native::pico_Uint32,
                 &mut ret.sys,
             );
-
             match init_code {
                 native::PICO_OK => Ok(ret),
                 err_code => Err(ret.get_error(err_code)),
