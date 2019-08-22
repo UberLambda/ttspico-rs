@@ -1,7 +1,7 @@
 use cc;
 use glob::glob;
 
-const PICO_SRC_DIR: &str = "pico/lib";
+const PICO_SRC_DIR: &str = "build/pico/lib";
 const PICO_LIB_NAME: &str = "svoxpico";
 
 fn main() {
@@ -15,5 +15,5 @@ fn main() {
         .files(src_files)
         .compile(PICO_LIB_NAME); // (static library)
 
-    println!("cargo:rustc-link-lib={}", PICO_LIB_NAME);
+    println!("cargo:rustc-link-lib=static={}", PICO_LIB_NAME);
 }
