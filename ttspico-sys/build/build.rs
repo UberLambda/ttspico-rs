@@ -13,6 +13,8 @@ fn main() {
     cc::Build::new()
         .include(PICO_SRC_DIR)
         .files(src_files)
+        .warnings(false)
+        .extra_warnings(false)
         .compile(PICO_LIB_NAME); // (static library)
 
     println!("cargo:rustc-link-lib=static={}", PICO_LIB_NAME);
