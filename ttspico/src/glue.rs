@@ -48,6 +48,7 @@ impl Drop for PicoString {
     }
 }
 
+/// Convert `string` to a [`ffi::CString`]; on failure, returns a `PicoError` with the given description (and code -1).
 pub fn make_cstring(string: impl AsRef<str>, err_descr: &str) -> Result<ffi::CString, PicoError> {
     ffi::CString::new(string.as_ref()).map_err(|err| PicoError {
         code: -1,
