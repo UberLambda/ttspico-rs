@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications (C) 2019 Paolo Jovon <paolo.jovon@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +22,7 @@
  *
  * History:
  * - 2009-04-20 -- initial version
+ * - 2019-08-28 -- x86_64 compatibility fixes
  */
 #include "picodefs.h"
 #include "picoos.h"
@@ -41,10 +43,10 @@ extern "C" {
 #define MAGIC_MASK 0x5069636F  /* Pico */
 
 #define SET_MAGIC_NUMBER(sys) \
-    (sys)->magic = ((picoos_uint32) (sys)) ^ MAGIC_MASK
+    (sys)->magic = ((picoos_uintptr_t) (sys)) ^ MAGIC_MASK
 
 #define CHECK_MAGIC_NUMBER(sys) \
-    ((sys)->magic == (((picoos_uint32) (sys)) ^ MAGIC_MASK))
+    ((sys)->magic == (((picoos_uintptr_t) (sys)) ^ MAGIC_MASK))
 
 
 
@@ -90,7 +92,7 @@ pico_Status pico_initialize_priv(
         status = PICO_ERR_NULLPTR_ACCESS;
     } else {
         byte_ptr_t rest_mem;
-        picoos_uint32 rest_mem_size;
+        picoos_objsize_t rest_mem_size;
         pico_System sys;
         picoos_MemoryManager sysMM;
         picoos_ExceptionManager sysEM;

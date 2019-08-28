@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications (C) 2019 Paolo Jovon <paolo.jovon@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +24,7 @@
  *
  * History:
  * - 2009-04-20 -- initial version
+ * - 2019-08-28 -- added picopal_uintptr_t
  *
  */
 /**
@@ -39,6 +41,7 @@
 #include <stdarg.h>
 #include <math.h>
 #include <stddef.h>
+#include <stdint.h>
 #include "picopltf.h"
 #include "picodefs.h"
 
@@ -117,6 +120,7 @@ typedef unsigned char   picopal_uchar;
 
 typedef size_t    picopal_objsize_t;
 typedef ptrdiff_t picopal_ptrdiff_t;
+typedef uintptr_t picopal_uintptr_t;
 
 /* *************************************************/
 /* functions                                       */

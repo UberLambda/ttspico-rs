@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications (C) 2019 Paolo Jovon <paolo.jovon@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +27,7 @@
  *
  * History:
  * - 2009-04-20 -- initial version
+ * - 2019-08-28 -- made magic numbers be uintptr_t (for x86_64 compatibility)
  *
  */
 
@@ -48,7 +50,7 @@ extern "C" {
 
 /* Pico system descriptor */
 typedef struct pico_system {
-    picoos_uint32 magic;        /* magic number used to validate handles */
+    picoos_uintptr_t magic;        /* magic number used to validate handles */
     picoos_Common common;
     picorsrc_ResourceManager rm;
     picoctrl_Engine engine;

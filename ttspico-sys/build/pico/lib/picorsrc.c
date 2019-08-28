@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications (C) 2019 Paolo Jovon <paolo.jovon@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +22,7 @@
  *
  * History:
  * - 2009-04-20 -- initial version
- *
+ * - 2019-08-28 -- x86_64 compatibility fixes
  */
 
 #include "picodefs.h"
@@ -58,7 +59,7 @@ extern "C" {
  *
  */
 typedef struct picorsrc_resource {
-    picoos_uint32 magic;  /* magic number used to validate handles */
+    picoos_uintptr_t magic;  /* magic number used to validate handles */
     /* next connects all active resources of a resource manager and the garbaged resources of the manager's free list */
     picorsrc_Resource next;
     picorsrc_resource_type_t type;
@@ -75,10 +76,10 @@ typedef struct picorsrc_resource {
 #define MAGIC_MASK 0x7049634F  /* pIcO */
 
 #define SET_MAGIC_NUMBER(res) \
-    (res)->magic = ((picoos_uint32) (res)) ^ MAGIC_MASK
+    (res)->magic = ((picoos_uintptr_t) (res)) ^ MAGIC_MASK
 
 #define CHECK_MAGIC_NUMBER(res) \
-    ((res)->magic == (((picoos_uint32) (res)) ^ MAGIC_MASK))
+    ((res)->magic == (((picoos_uintptr_t) (res)) ^ MAGIC_MASK))
 
 
 
@@ -603,7 +604,7 @@ pico_status_t picorsrc_loadResource(picorsrc_ResourceManager this,
             status = (NULL == res->raw_mem) ? PICO_EXC_OUT_OF_MEM : PICO_OK;
         }
         if (PICO_OK == status) {
-            rem = (picoos_uint32) res->raw_mem % PICOOS_ALIGN_SIZE;
+            rem = (picoos_uintptr_t) res->raw_mem % PICOOS_ALIGN_SIZE;
             if (rem > 0) {
                 res->start = res->raw_mem + (PICOOS_ALIGN_SIZE - rem);
             } else {

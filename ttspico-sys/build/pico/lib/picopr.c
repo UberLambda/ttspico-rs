@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications (C) 2019 Paolo Jovon <paolo.jovon@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +24,7 @@
  *
  * History:
  * - 2009-04-20 -- initial version
+ * - 2019-08-28 -- x86_64 compatibility fixes
  *
  */
 
@@ -3209,11 +3211,11 @@ pico_status_t prReset(register picodata_ProcessingUnit this, picoos_int32 resetM
     pr->actCtxChanged = FALSE;
     pr->prodList = NULL;
 
-    if (((picoos_uint32)pr->pr_WorkMem % PICOOS_ALIGN_SIZE) == 0) {
+    if (((picoos_uintptr_t)pr->pr_WorkMem % PICOOS_ALIGN_SIZE) == 0) {
         pr->workMemTop = 0;
     }
     else {
-        pr->workMemTop = PICOOS_ALIGN_SIZE - ((picoos_uint32)pr->pr_WorkMem % PICOOS_ALIGN_SIZE);
+        pr->workMemTop = PICOOS_ALIGN_SIZE - ((picoos_uintptr_t)pr->pr_WorkMem % PICOOS_ALIGN_SIZE);
     }
     pr->maxWorkMemTop=0;
     pr->dynMemSize=0;

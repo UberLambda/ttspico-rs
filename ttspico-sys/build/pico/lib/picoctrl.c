@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications (C) 2019 Paolo Jovon <paolo.jovon@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +24,7 @@
  *
  * History:
  * - 2009-04-20 -- initial version
+ * - 2019-08-28 -- x86_64 compatibility fixes
  *
  */
 
@@ -496,7 +498,7 @@ void picoctrl_disposeControl(picoos_MemoryManager mm,
  *  shortcut     : eng
  */
 typedef struct picoctrl_engine {
-    picoos_uint32 magic;        /* magic number used to validate handles */
+    picoos_uintptr_t magic;        /* magic number used to validate handles */
     void *raw_mem;
     picoos_Common common;
     picorsrc_Voice voice;
@@ -508,10 +510,10 @@ typedef struct picoctrl_engine {
 #define MAGIC_MASK 0x5069436F  /* PiCo */
 
 #define SET_MAGIC_NUMBER(eng) \
-    (eng)->magic = ((picoos_uint32) (eng)) ^ MAGIC_MASK
+    (eng)->magic = ((picoos_uintptr_t) (eng)) ^ MAGIC_MASK
 
 #define CHECK_MAGIC_NUMBER(eng) \
-    ((eng)->magic == (((picoos_uint32) (eng)) ^ MAGIC_MASK))
+    ((eng)->magic == (((picoos_uintptr_t) (eng)) ^ MAGIC_MASK))
 
 /**
  * performs an engine reset

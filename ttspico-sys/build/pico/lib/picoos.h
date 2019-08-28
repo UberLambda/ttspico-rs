@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications (C) 2019 Paolo Jovon <paolo.jovon@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +22,7 @@
  *
  * History:
  * - 2009-04-20 -- initial version
+ * - 2019-08-28 -- added picoos_uintptr_t
  *
  */
 /**
@@ -69,6 +71,7 @@ typedef picopal_uint8   picoos_bool;
 
 typedef picopal_objsize_t picoos_objsize_t;
 typedef picopal_ptrdiff_t picoos_ptrdiff_t;
+typedef picopal_uintptr_t picoos_uintptr_t;
 
 /* *************************************************/
 /* functions                                       */
