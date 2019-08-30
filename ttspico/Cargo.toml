@@ -12,7 +12,8 @@ High-level bindings to the Pico TTS engine.
 categories = ["api-bindings", "multimedia::audio", "text-processing"]
 license = "Apache-2.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[badges]
+azure-devops = { project = "UberLambda/ttspico-rs", pipeline = "ttspico-rs", build = "1" }
 
 [dependencies]
 ttspico-sys = { path = "../ttspico-sys", version = "^0.1" }
