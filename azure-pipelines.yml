@@ -1,0 +1,11 @@
+# See: https://crate-ci.github.io/azure-pipelines/setup.html
+
+stages:
+ - template: azure/stages.yml@templates
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: crate-ci/azure-pipelines
+      endpoint: GitHub
