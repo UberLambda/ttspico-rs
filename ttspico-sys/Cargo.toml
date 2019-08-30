@@ -1,6 +1,6 @@
 [package]
 name = "ttspico-sys"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 
 repository = "https://github.com/UberLambda/ttspico-rs"
@@ -17,7 +17,7 @@ build = "build/build.rs"
 links = "svoxpico"
 
 [badges]
-azure-devops = { project = "UberLambda/ttspico-rs", pipeline = "ttspico-rs", build = "1" }
+azure-devops = { project = "pj-public/UberLambda", pipeline = "ttspico-rs", build = "1" }
 
 [dependencies]
 libc = "^0.2"
