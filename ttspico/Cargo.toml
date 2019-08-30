@@ -3,6 +3,7 @@ name = "ttspico"
 version = "0.1.0"
 edition = "2018"
 
+repository = "https://github.com/UberLambda/ttspico-rs"
 authors = ["Paolo Jovon <paolo.jovon@gmail.com>"]
 readme = "../README.md"
 description = """
