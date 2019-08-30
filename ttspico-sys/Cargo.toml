@@ -1,9 +1,17 @@
 [package]
 name = "ttspico-sys"
 version = "0.1.0"
-authors = ["Paolo Jovon <paolo.jovon@gmail.com>"]
 edition = "2018"
+
+authors = ["Paolo Jovon <paolo.jovon@gmail.com>"]
 readme = "../README.md"
+description = """
+Low-level bindings to the Pico TTS engine.
+(builds Pico from source, includes patches for x86_64 support)
+"""
+categories = ["external-ffi-bindings", "multimedia::audio", "text-processing"]
+license = "Apache-2.0"
+
 build = "build/build.rs"
 links = "svoxpico"
 

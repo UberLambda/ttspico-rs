@@ -1,8 +1,16 @@
 [package]
 name = "ttspico"
 version = "0.1.0"
-authors = ["Paolo Jovon <paolo.jovon@gmail.com>"]
 edition = "2018"
+
+authors = ["Paolo Jovon <paolo.jovon@gmail.com>"]
+readme = "../README.md"
+description = """
+High-level bindings to the Pico TTS engine.
+(includes patches for x86_64 support)
+"""
+categories = ["api-bindings", "multimedia::audio", "text-processing"]
+license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,4 +18,4 @@ edition = "2018"
 ttspico-sys = { path = "../ttspico-sys", version = "^0.1" }
 
 [dev-dependencies]
-cpal = "^0.10"
+cpal = "^0.10" # (for examples/hello.rs)
