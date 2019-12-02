@@ -18,10 +18,10 @@
 
 mod glue;
 use glue::{make_cstring, PicoString};
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::{ffi, fmt};
 use ttspico_sys as native;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 /// An error caused by Pico TTS.
 #[derive(Debug, PartialEq, Eq)]
@@ -95,7 +95,10 @@ impl System {
     /// Creates a Pico [`Resource`] given its filepath.
     /// # See
     /// [`ttspico_sys::pico_loadResource`], [`ttspico_sys::pico_getResourceName`].
-    pub fn load_resource(sys: Rc<RefCell<Self>>, path: impl AsRef<str>) -> Result<Rc<RefCell<Resource>>, PicoError> {
+    pub fn load_resource(
+        sys: Rc<RefCell<Self>>,
+        path: impl AsRef<str>,
+    ) -> Result<Rc<RefCell<Resource>>, PicoError> {
         let c_path = make_cstring(path, "Invalid resource name")?;
         unsafe {
             let mut c_res = std::ptr::null_mut::<native::pico_resource>();
@@ -112,18 +115,17 @@ impl System {
                 c_name.as_mut_ptr(),
             ))?;
 
-            Ok(Rc::new(RefCell::new(Resource {
-                sys,
-                c_res,
-                c_name,
-            })))
+            Ok(Rc::new(RefCell::new(Resource { sys, c_res, c_name })))
         }
     }
 
     /// Creates a Pico [`Voice`] given its name.
     /// # See
     /// [`ttspico_sys::pico_createVoiceDefinition`].
-    pub fn create_voice<'a>(sys: Rc<RefCell<Self>>, name: impl AsRef<str>) -> Result<Rc<RefCell<Voice>>, PicoError> {
+    pub fn create_voice<'a>(
+        sys: Rc<RefCell<Self>>,
+        name: impl AsRef<str>,
+    ) -> Result<Rc<RefCell<Voice>>, PicoError> {
         let c_name = make_cstring(name, "Invalid voice name")?;
         unsafe {
             sys.borrow().get_error(native::pico_createVoiceDefinition(
@@ -131,7 +133,11 @@ impl System {
                 c_name.as_ptr() as *const native::pico_Char,
             ))?;
         }
-        Ok(Rc::new(RefCell::new(Voice { sys, c_name, resources:Vec::new() })))
+        Ok(Rc::new(RefCell::new(Voice {
+            sys,
+            c_name,
+            resources: Vec::new(),
+        })))
     }
 }
 
@@ -205,7 +211,7 @@ unsafe impl Send for Resource {}
 pub struct Voice {
     sys: Rc<RefCell<System>>,
     c_name: ffi::CString,
-    resources: Vec<Rc<RefCell<Resource>>>
+    resources: Vec<Rc<RefCell<Resource>>>,
 }
 
 impl Voice {
@@ -238,9 +244,7 @@ impl Voice {
                 self.resources.push(resource);
                 err_code
             }
-            _ => {
-                err_code
-            }
+            _ => err_code,
         }
     }
 
@@ -252,15 +256,16 @@ impl Voice {
     /// [`ttspico_sys::pico_newEngine`].
     pub unsafe fn create_engine(voice: Rc<RefCell<Voice>>) -> Result<Engine, PicoError> {
         let mut c_engine = std::ptr::null_mut::<native::pico_engine>();
-        voice.borrow().sys.borrow().get_error(native::pico_newEngine(
-            voice.borrow().sys.borrow().c_sys,
-            voice.borrow().c_name.as_ptr() as *const native::pico_Char,
-            &mut c_engine,
-        ))?;
-        Ok(Engine {
-            voice,
-            c_engine,
-        })
+        voice
+            .borrow()
+            .sys
+            .borrow()
+            .get_error(native::pico_newEngine(
+                voice.borrow().sys.borrow().c_sys,
+                voice.borrow().c_name.as_ptr() as *const native::pico_Char,
+                &mut c_engine,
+            ))?;
+        Ok(Engine { voice, c_engine })
     }
 }
 
@@ -407,7 +412,13 @@ impl Engine {
             match c_code {
                 native::PICO_STEP_BUSY => Ok((n_written, EngineStatus::Busy)),
                 native::PICO_STEP_IDLE => Ok((n_written, EngineStatus::Idle)),
-                err_code => Err(self.voice.borrow().sys.borrow().get_error(err_code).unwrap_err()),
+                err_code => Err(self
+                    .voice
+                    .borrow()
+                    .sys
+                    .borrow()
+                    .get_error(err_code)
+                    .unwrap_err()),
             }
         }
     }
