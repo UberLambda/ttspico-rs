@@ -1,10 +1,10 @@
 [package]
 name = "ttspico"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 
 repository = "https://github.com/UberLambda/ttspico-rs"
-authors = ["Paolo Jovon <paolo.jovon@gmail.com>"]
+authors = ["Paolo Jovon <paolo.jovon@gmail.com>", "Sergio Tortosa Benedito"]
 readme = "../README.md"
 description = """
 High-level bindings to the Pico TTS engine.
