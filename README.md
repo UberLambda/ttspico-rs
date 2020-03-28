@@ -1,6 +1,5 @@
 # ttspico-rs
 [![Docs for ttspico](https://docs.rs/ttspico/badge.svg)](https://docs.rs/ttspico)
-[![Build Status](https://dev.azure.com/pj-public/UberLambda/_apis/build/status/ttspico-rs?branchName=devel)](https://dev.azure.com/pj-public/UberLambda/_build/latest?definitionId=1&branchName=devel)
 
 Rust bindings for Pico TTS, an open source ([Apache 2.0](LICENSE)) text-to-speech engine.
 
