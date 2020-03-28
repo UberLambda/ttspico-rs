@@ -16,9 +16,6 @@ license = "Apache-2.0"
 build = "build/build.rs"
 links = "svoxpico"
 
-[badges]
-azure-devops = { project = "pj-public/UberLambda", pipeline = "ttspico-rs", build = "1" }
-
 [dependencies]
 libc = "^0.2"
 

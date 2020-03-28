@@ -13,9 +13,6 @@ High-level bindings to the Pico TTS engine.
 categories = ["api-bindings", "multimedia::audio", "text-processing"]
 license = "Apache-2.0"
 
-[badges]
-azure-devops = { project = "pj-public/UberLambda", pipeline = "ttspico-rs", build = "1" }
-
 [dependencies]
 ttspico-sys = { path = "../ttspico-sys", version = "^0.1" }
 
