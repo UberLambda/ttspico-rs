@@ -5,7 +5,7 @@ jobs:
    parameters:
       setup:
         # libasound2-dev: required by alsa-sys <- cpal <- ttspico/examples/hello.rs
-        - script: sudo apt install libasound2-dev
+        - script: sudo apt update && sudo apt install libasound2-dev
           condition: eq(variables['Agent.OS'], 'Linux')
           displayName: Install libasound2-dev
 
