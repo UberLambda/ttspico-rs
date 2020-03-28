@@ -2,6 +2,7 @@
 //! Wraps [`ttspico-sys`](../ttspico_sys/index.html).
 
 // Copyright (c) 2019 Paolo Jovon <paolo.jovon@gmail.com>
+// Copyright (c) 2019 Sergio Tortosa Benedito
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +18,8 @@
 
 mod glue;
 use glue::{make_cstring, PicoString};
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::{ffi, fmt};
 use ttspico_sys as native;
 
@@ -69,7 +72,7 @@ impl System {
     /// Only one [`System`] should be instantiated per thread!
     /// # See
     /// [`ttspico_sys::pico_initialize`].
-    pub fn new(memsz: usize) -> Result<System, PicoError> {
+    pub fn new(memsz: usize) -> Result<Rc<RefCell<System>>, PicoError> {
         unsafe {
             let mem_layout = std::alloc::Layout::from_size_align(memsz, 16).unwrap();
             let mut ret = System {
@@ -83,7 +86,7 @@ impl System {
                 &mut ret.c_sys,
             );
             match ret.get_error(c_code) {
-                Ok(_) => Ok(ret),
+                Ok(_) => Ok(Rc::new(RefCell::new(ret))),
                 Err(err) => Err(err),
             }
         }
@@ -92,43 +95,49 @@ impl System {
     /// Creates a Pico [`Resource`] given its filepath.
     /// # See
     /// [`ttspico_sys::pico_loadResource`], [`ttspico_sys::pico_getResourceName`].
-    pub fn load_resource<'a>(&'a self, path: impl AsRef<str>) -> Result<Resource<'a>, PicoError> {
+    pub fn load_resource(
+        sys: Rc<RefCell<Self>>,
+        path: impl AsRef<str>,
+    ) -> Result<Rc<RefCell<Resource>>, PicoError> {
         let c_path = make_cstring(path, "Invalid resource name")?;
         unsafe {
             let mut c_res = std::ptr::null_mut::<native::pico_resource>();
-            self.get_error(native::pico_loadResource(
-                self.c_sys,
+            sys.borrow().get_error(native::pico_loadResource(
+                sys.borrow().c_sys,
                 c_path.as_ptr() as *const native::pico_Char,
                 &mut c_res,
             ))?;
 
             let mut c_name = PicoString::new(native::PICO_MAX_RESOURCE_NAME_SIZE);
-            self.get_error(native::pico_getResourceName(
-                self.c_sys,
+            sys.borrow().get_error(native::pico_getResourceName(
+                sys.borrow().c_sys,
                 c_res,
                 c_name.as_mut_ptr(),
             ))?;
 
-            Ok(Resource::<'a> {
-                sys: &self,
-                c_res,
-                c_name,
-            })
+            Ok(Rc::new(RefCell::new(Resource { sys, c_res, c_name })))
         }
     }
 
     /// Creates a Pico [`Voice`] given its name.
     /// # See
     /// [`ttspico_sys::pico_createVoiceDefinition`].
-    pub fn create_voice<'a>(&'a self, name: impl AsRef<str>) -> Result<Voice<'a>, PicoError> {
+    pub fn create_voice<'a>(
+        sys: Rc<RefCell<Self>>,
+        name: impl AsRef<str>,
+    ) -> Result<Rc<RefCell<Voice>>, PicoError> {
         let c_name = make_cstring(name, "Invalid voice name")?;
         unsafe {
-            self.get_error(native::pico_createVoiceDefinition(
-                self.c_sys,
+            sys.borrow().get_error(native::pico_createVoiceDefinition(
+                sys.borrow().c_sys,
                 c_name.as_ptr() as *const native::pico_Char,
             ))?;
         }
-        Ok(Voice { sys: &self, c_name })
+        Ok(Rc::new(RefCell::new(Voice {
+            sys,
+            c_name,
+            resources: Vec::new(),
+        })))
     }
 }
 
@@ -158,16 +167,17 @@ unsafe impl Send for System {}
 
 /// A loaded Pico TTS resource (TA or SG).
 #[derive(Debug)]
-pub struct Resource<'a> {
-    sys: &'a System,
+pub struct Resource {
+    //sys: &'a System,
+    sys: Rc<RefCell<System>>,
     c_res: native::pico_Resource,
     c_name: PicoString,
 }
 
-impl<'a> Resource<'a> {
+impl Resource {
     /// Returns a reference to the parent [`System`] that loaded this resource.
-    pub fn sys(&self) -> &System {
-        &self.sys
+    pub fn sys(&self) -> Rc<RefCell<System>> {
+        self.sys.clone()
     }
 
     /// Returns the resource's internal name (if it can be converted to UTF-8).
@@ -176,37 +186,38 @@ impl<'a> Resource<'a> {
     }
 }
 
-impl<'a> Drop for Resource<'a> {
+impl Drop for Resource {
     fn drop(&mut self) {
         unsafe {
             if !self.c_res.is_null() {
-                let _ = native::pico_unloadResource(self.sys.c_sys, &mut self.c_res);
+                let _ = native::pico_unloadResource(self.sys.borrow().c_sys, &mut self.c_res);
             }
         }
     }
 }
 
-impl<'a> PartialEq for Resource<'a> {
+impl PartialEq for Resource {
     fn eq(&self, other: &Self) -> bool {
         self.sys == other.sys && self.c_res == other.c_res
     }
 }
 
-impl<'a> Eq for Resource<'a> {}
+impl Eq for Resource {}
 
-unsafe impl<'a> Send for Resource<'a> {}
+unsafe impl Send for Resource {}
 
 /// A Pico TTS voice.
 #[derive(Debug)]
-pub struct Voice<'a> {
-    sys: &'a System,
+pub struct Voice {
+    sys: Rc<RefCell<System>>,
     c_name: ffi::CString,
+    resources: Vec<Rc<RefCell<Resource>>>,
 }
 
-impl<'a> Voice<'a> {
+impl Voice {
     /// Returns a reference to the parent [`System`] that created this voice.
-    pub fn sys(&self) -> &System {
-        &self.sys
+    pub fn sys(&self) -> Rc<RefCell<System>> {
+        self.sys.clone()
     }
 
     /// Returns the voice's name (if it can be converted to UTF-8).
@@ -218,14 +229,22 @@ impl<'a> Voice<'a> {
     /// A [`Voice`] needs both a TA and SG resource to be added to it.
     /// # See
     /// [`ttspico_sys::pico_addResourceToVoiceDefinition`].
-    pub fn add_resource(&mut self, resource: &'a Resource) -> Result<(), PicoError> {
-        unsafe {
+    pub fn add_resource(&mut self, resource: Rc<RefCell<Resource>>) -> Result<(), PicoError> {
+        let err_code = unsafe {
             let c_code = native::pico_addResourceToVoiceDefinition(
-                self.sys.c_sys,
+                self.sys.borrow().c_sys,
                 self.c_name.as_ptr() as *const native::pico_Char,
-                resource.c_name.as_ptr() as *const native::pico_Char,
+                resource.borrow().c_name.as_ptr() as *const native::pico_Char,
             );
-            self.sys.get_error(c_code)
+            self.sys.borrow().get_error(c_code)
+        };
+
+        match err_code {
+            Ok(_) => {
+                self.resources.push(resource);
+                err_code
+            }
+            _ => err_code,
         }
     }
 
@@ -235,45 +254,46 @@ impl<'a> Voice<'a> {
     /// creating an engine. Failing to do so could result in a segmentation fault!
     /// # See
     /// [`ttspico_sys::pico_newEngine`].
-    pub unsafe fn create_engine<'b>(&'b self) -> Result<Engine<'b>, PicoError> {
+    pub unsafe fn create_engine(voice: Rc<RefCell<Voice>>) -> Result<Engine, PicoError> {
         let mut c_engine = std::ptr::null_mut::<native::pico_engine>();
-        self.sys.get_error(native::pico_newEngine(
-            self.sys.c_sys,
-            self.c_name.as_ptr() as *const native::pico_Char,
-            &mut c_engine,
-        ))?;
-        Ok(Engine {
-            voice: &self,
-            c_engine,
-        })
+        voice
+            .borrow()
+            .sys
+            .borrow()
+            .get_error(native::pico_newEngine(
+                voice.borrow().sys.borrow().c_sys,
+                voice.borrow().c_name.as_ptr() as *const native::pico_Char,
+                &mut c_engine,
+            ))?;
+        Ok(Engine { voice, c_engine })
     }
 }
 
-impl<'a> Drop for Voice<'a> {
+impl Drop for Voice {
     fn drop(&mut self) {
         unsafe {
             let _ = native::pico_releaseVoiceDefinition(
-                self.sys.c_sys,
+                self.sys.borrow().c_sys,
                 self.c_name.as_ptr() as *const native::pico_Char,
             );
         }
     }
 }
 
-impl<'a> PartialEq for Voice<'a> {
+impl PartialEq for Voice {
     fn eq(&self, other: &Self) -> bool {
         self.sys == other.sys && self.c_name == other.c_name
     }
 }
 
-impl<'a> Eq for Voice<'a> {}
+impl Eq for Voice {}
 
-unsafe impl<'a> Send for Voice<'a> {}
+unsafe impl Send for Voice {}
 
 /// A Pico TTS engine.
 #[derive(Debug)]
-pub struct Engine<'a> {
-    voice: &'a Voice<'a>,
+pub struct Engine {
+    voice: Rc<RefCell<Voice>>,
     c_engine: native::pico_Engine,
 }
 
@@ -300,7 +320,7 @@ pub enum EngineResetMode {
     Soft = native::PICO_RESET_SOFT,
 }
 
-impl<'a> Engine<'a> {
+impl Engine {
     /// Converts a Pico engine-level error `code` to a `Err(PicoError)` if code is not
     /// [`PICO_OK`](`ttspico_sys::PICO_OK`), else returns `Ok(())`.
     unsafe fn get_error(&self, code: native::pico_Status) -> Result<(), PicoError> {
@@ -392,18 +412,24 @@ impl<'a> Engine<'a> {
             match c_code {
                 native::PICO_STEP_BUSY => Ok((n_written, EngineStatus::Busy)),
                 native::PICO_STEP_IDLE => Ok((n_written, EngineStatus::Idle)),
-                err_code => Err(self.voice.sys.get_error(err_code).unwrap_err()),
+                err_code => Err(self
+                    .voice
+                    .borrow()
+                    .sys
+                    .borrow()
+                    .get_error(err_code)
+                    .unwrap_err()),
             }
         }
     }
 }
 
-impl<'a> PartialEq for Engine<'a> {
+impl PartialEq for Engine {
     fn eq(&self, other: &Self) -> bool {
         self.voice == other.voice && self.c_engine == other.c_engine
     }
 }
 
-impl<'a> Eq for Engine<'a> {}
+impl Eq for Engine {}
 
-unsafe impl<'a> Send for Engine<'a> {}
+unsafe impl Send for Engine {}

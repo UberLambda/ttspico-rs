@@ -23,6 +23,7 @@
 // THE SOFTWARE.
 
 use cpal::traits::{EventLoopTrait, HostTrait};
+use std::rc::Rc;
 use ttspico as pico;
 
 fn main() {
@@ -31,32 +32,34 @@ fn main() {
     let sys = pico::System::new(4 * 1024 * 1024).expect("Could not init system");
 
     // 2. Load Text Analysis (TA) and Speech Generation (SG) resources for the voice you want to use
-    let ta_res = sys
-        .load_resource("ttspico-sys/build/pico/lang/en-US_ta.bin")
-        .expect("Failed to load TA");
-    let sg_res = sys
-        .load_resource("ttspico-sys/build/pico/lang/en-US_lh0_sg.bin")
-        .expect("Failed to load SG");
+    let ta_res =
+        pico::System::load_resource(Rc::clone(&sys), "ttspico-sys/build/pico/lang/en-US_ta.bin")
+            .expect("Failed to load TA");
+    let sg_res = pico::System::load_resource(
+        Rc::clone(&sys),
+        "ttspico-sys/build/pico/lang/en-US_lh0_sg.bin",
+    )
+    .expect("Failed to load SG");
     println!(
         "TA: {}, SG: {}",
-        ta_res.name().unwrap(),
-        sg_res.name().unwrap()
+        ta_res.borrow().name().unwrap(),
+        sg_res.borrow().name().unwrap()
     );
 
     // 3. Create a Pico voice definition and attach the loaded resources to it
-    let mut voice = sys
-        .create_voice("TestVoice")
-        .expect("Failed to create voice");
+    let voice = pico::System::create_voice(sys, "TestVoice").expect("Failed to create voice");
     voice
-        .add_resource(&ta_res)
+        .borrow_mut()
+        .add_resource(ta_res)
         .expect("Failed to add TA to voice");
     voice
-        .add_resource(&sg_res)
+        .borrow_mut()
+        .add_resource(sg_res)
         .expect("Failed to add SG to voice");
 
     // 4. Create an engine from the voice definition
     // UNSAFE: Creating an engine without attaching the resources will result in a crash!
-    let mut engine = unsafe { voice.create_engine().expect("Failed to create engine") };
+    let mut engine = unsafe { pico::Voice::create_engine(voice).expect("Failed to create engine") };
 
     // 5. Put (UTF-8) text to be spoken into the engine
     // See `Engine::put_text()` for more details.
