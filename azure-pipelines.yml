@@ -1,7 +1,7 @@
 # See: https://crate-ci.github.io/azure-pipelines/setup.html
 
-stages:
- - template: azure/stages.yml@templates
+jobs:
+ - template: default.yml@templates
    parameters:
       setup:
         # libasound2-dev: required by alsa-sys <- cpal <- ttspico/examples/hello.rs
@@ -14,4 +14,5 @@ resources:
     - repository: templates
       type: github
       name: crate-ci/azure-pipelines
+      ref: refs/heads/v0.4
       endpoint: GitHub
