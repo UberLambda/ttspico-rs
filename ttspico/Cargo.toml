@@ -17,7 +17,8 @@ license = "Apache-2.0"
 ttspico-sys = { path = "../ttspico-sys", version = "^0.1" }
 
 [dev-dependencies]
-cpal = "^0.10" # (for examples/hello.rs)
+cpal = "^0.11" # (for examples/speak.rs)
+hound = "^3.4.0"
 
 # See https://github.com/RustAudio/cpal/issues/342
 [target.'cfg(target_os = "windows")'.dev-dependencies]
