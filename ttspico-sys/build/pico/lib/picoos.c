@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications copyright (C) 2019-2020 Paolo Jovon <paolo.jovon@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +18,12 @@
  * @file picoos.c
  *
  * Copyright (C) 2008-2009 SVOX AG, Baslerstr. 30, 8048 Zuerich, Switzerland
+ * Modifications copyright (C) 2019-2020 Paolo Jovon <paolo.jovon@gmail.com>
  * All rights reserved.
  *
  * History:
  * - 2009-04-20 -- initial version
+ * - 2020-04-14 -- 64-bit compatibility fixes
  *
  */
 
@@ -313,8 +316,8 @@ static int os_init_mem_block(picoos_MemoryManager this)
     newBlockAddr = (void *) this->lastBlock->data;
     size = this->lastBlock->size;
     cbeg = (MemCellHdr) newBlockAddr;
-    cmid = (MemCellHdr)((picoos_objsize_t)newBlockAddr + this->fullCellHdrSize);
-    cend = (MemCellHdr)((picoos_objsize_t)newBlockAddr + size
+    cmid = (MemCellHdr)((picoos_uintptr_t)newBlockAddr + this->fullCellHdrSize);
+    cend = (MemCellHdr)((picoos_uintptr_t)newBlockAddr + size
             - this->fullCellHdrSize);
     cbeg->size = 0;
 
@@ -391,11 +394,11 @@ picoos_MemoryManager picoos_newMemoryManager(
     /* get aligned size of header without free-list fields; the result may be compiler-dependent;
      the size is therefore computed by inspecting the end addresses of the fields 'size' and 'leftCell';
      the higher of the ending addresses is used to get the (aligned) starting address
-     of the application contents */
-    this->usedCellHdrSize = (picoos_objsize_t) &test_cell.size
-            - (picoos_objsize_t) &test_cell + sizeof(picoos_objsize_t);
-    size2 = (picoos_objsize_t) &test_cell.leftCell - (picoos_objsize_t)
-            &test_cell + sizeof(MemCellHdr);
+     of the application contents
+     (NOTE: patched for 64-bit support!)
+     */
+    this->usedCellHdrSize = (picoos_uintptr_t)(&test_cell.size) - (picoos_uintptr_t)(&test_cell) + sizeof(picoos_objsize_t);
+    size2 = (picoos_uintptr_t)(&test_cell.leftCell) - (picoos_uintptr_t)(&test_cell) + sizeof(MemCellHdr);
     if (size2 > this->usedCellHdrSize) {
         this->usedCellHdrSize = size2;
     }
@@ -534,11 +537,11 @@ void * picoos_allocate(picoos_MemoryManager this,
         c->prevFree->nextFree = c->nextFree;
         c->nextFree->prevFree = c->prevFree;
     } else {
-        c2 = (MemCellHdr)((picoos_objsize_t)c + cellSize);
+        c2 = (MemCellHdr)((picoos_uintptr_t)c + cellSize);
         c2->size = c->size - cellSize;
         c->size = cellSize;
         c2->leftCell = c;
-        c2r = (MemCellHdr)((picoos_objsize_t)c2 + c2->size);
+        c2r = (MemCellHdr)((picoos_uintptr_t)c2 + c2->size);
         c2r->leftCell = c2;
         c2->nextFree = c->nextFree;
         c2->nextFree->prevFree = c2;
@@ -553,7 +556,7 @@ void * picoos_allocate(picoos_MemoryManager this,
     }
 
     c->size = -(c->size);
-    adr = (void *)((picoos_objsize_t)c + this->usedCellHdrSize);
+    adr = (void *)((picoos_uintptr_t)c + this->usedCellHdrSize);
     return adr;
 }
 
@@ -566,18 +569,22 @@ void picoos_deallocate(picoos_MemoryManager this, void * * adr)
 
 
     if ((*adr) != NULL) {
-        c = (MemCellHdr)((picoos_objsize_t)(*adr) - this->usedCellHdrSize);
+        c = (MemCellHdr)((picoos_uintptr_t)(*adr) - this->usedCellHdrSize);
         c->size = -(c->size);
+
+        // HACK: This ensures that the size never goes beyond the 31st bit on 64-bit
+        //       platforms (solving a crash-on-exit issue)
+        c->size &= 0xFFFFFFFF;
 
         /*PICODBG_TRACE(("deallocating %d", c->size));*/
         /* statistics */
         this->usedSize -= c->size;
 
-        cr = (MemCellHdr)((picoos_objsize_t)c + c->size);
+        cr = (MemCellHdr)((picoos_uintptr_t)c + c->size);
         cl = c->leftCell;
         if (cl->size > 0) {
             if (cr->size > 0) {
-                crr = (MemCellHdr)((picoos_objsize_t)cr + cr->size);
+                crr = (MemCellHdr)((picoos_uintptr_t)cr + cr->size);
                 crr->leftCell = cl;
                 cl->size = ((cl->size + c->size) + cr->size);
                 cr->nextFree->prevFree = cr->prevFree;
@@ -588,7 +595,7 @@ void picoos_deallocate(picoos_MemoryManager this, void * * adr)
             }
         } else {
             if ((cr->size > 0)) {
-                crr = (MemCellHdr)((picoos_objsize_t)cr + cr->size);
+                crr = (MemCellHdr)((picoos_uintptr_t)cr + cr->size);
                 crr->leftCell = c;
                 c->size = (c->size + cr->size);
                 c->nextFree = cr->nextFree;

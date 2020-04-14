@@ -8,3 +8,7 @@ Cargo.lock
 *.obj
 *.dll
 *.lib
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
