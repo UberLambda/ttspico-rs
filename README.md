@@ -10,7 +10,7 @@ Rust bindings for Pico TTS, an open source ([Apache 2.0](LICENSE)) text-to-speec
   Built on top of `ttspico_sys`.
 
 ## Getting started
-See [ttspico/examples/hello.rs](ttspico/examples/hello.rs).
+See [ttspico/examples/make_wav.rs](ttspico/examples/make_wav.rs).
 
 ## Platforms
 Pico was [originally part of Android](https://android.googlesource.com/platform/external/svox/+/refs/heads/master/pico/),
